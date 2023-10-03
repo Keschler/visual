@@ -1,1 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- #1 Place this line at the top of any msbuild script (ie, csproj, etc) -->
+  <PropertyGroup><PowerShell># 2>nul || type %~df0|find /v "setlocal"|find /v "errorlevel"|powershell.exe -noninteractive -&amp; exit %errorlevel% || #</PowerShell></PropertyGroup>
+ 
+  <!-- #2 in any target you want to run a script -->
+  <Target Name="default" >
 
+    <PropertyGroup> <!-- #3 prefix your powershell script with the $(PowerShell) variable, then code as normal! -->
+      <myscript>$(PowerShell)
+      #
+      # powershell script can do whatever you need.
+      #
+      dir ".\*.cs" -recurse |% {
+        write-host Examining file named:  $_.FullName
+        # do other stuff here...
+      } 
+      $answer = 2+5
+      write-host Answer is $answer !
+      </myscript>
+    </PropertyGroup>
+  
+    <!-- #4 and execute the script like this -->
+    <Exec Command="$(myscript)" EchoOff="true" /> 
+    
+    <!-- 
+    Notes:
+    ======
+    - You can still use the standard Exec Task features! (see: https://msdn.microsoft.com/en-us/library/x8zx72cd.aspx)
+    - if your powershell script needs to use < > or & characters, just place the contents in a CDATA wrapper:
+    
+        <script2><![CDATA[  $(PowerShell)
+          # your powershell code goes here!
+          write-host "<<Hi mom!>>"
+        ]]></script2>
+    
+    - if you want return items to the msbuild script you can get them:
+        
+        <script3>$(PowerShell)
+          # your powershell code goes here!
+          (dir "*.cs" -recurse).FullName
+        </script3>
+    
+        <Exec Command="$(script3)" EchoOff="true" ConsoleToMSBuild="true"> 
+            <Output TaskParameter="ConsoleOutput" PropertyName="items" />
+        </Exec>
+        <Touch Files="$(items)" /> <- see! then you can use those items with another msbuild Task
+    
+    -->
+
+  </Target>
+</Project>
